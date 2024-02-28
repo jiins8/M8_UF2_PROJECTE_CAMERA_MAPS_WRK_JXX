@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "859134199342",
+    "project_id": "projecte-camera-mapsfb",
+    "storage_bucket": "projecte-camera-mapsfb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:859134199342:android:2a5552788c2882823281bf",
+        "android_client_info": {
+          "package_name": "com.example.m8_uf2_projecte_camera_maps_wrk_jxx"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArVO7pbhydowL4x-lsjd5FAJAXvyhMEr4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

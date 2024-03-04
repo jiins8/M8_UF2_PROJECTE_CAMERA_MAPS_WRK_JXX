@@ -1,14 +1,12 @@
 package com.example.m8_uf2_projecte_camera_maps_wrk_jxx;
 
 import android.Manifest;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.view.View;
@@ -43,12 +41,11 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
@@ -225,63 +222,36 @@ public class CameraActivity extends AppCompatActivity {
     private void saveImageToFirestore(File file) {
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // Replace "images" with the actual name of your Firestore collection
         CollectionReference imagesRef = db.collection("images");
 
-        // Generate a unique document ID for each image
         String documentId = imagesRef.document().getId();
 
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("images/" + userId + "/" + documentId + ".jpg");
         Uri fileUri = Uri.fromFile(file);
 
-        // Create a unique file name in Cloud Storage
-        String cloudStorageFileName = "images/" + userId + "/" + documentId + ".jpg";
+        storageRef.putFile(fileUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        Map<String, Object> imageInfo = new HashMap<>();
+                        imageInfo.put("imageUrl", uri.toString());
+                        imageInfo.put("userId", userId);
 
-        // Get the Cloud Storage URL
-        String storageUrl = "https://firebasestorage.googleapis.com/v0/b/" +
-                "<projecte-camera-mapsfb>.appspot.com/o/" +
-                cloudStorageFileName.replace("/", "%2F") +
-                "?alt=media";
-
-        // Add any additional fields you want to store in Firestore
-        Map<String, Object> imageInfo = new HashMap<>();
-        imageInfo.put("imageUrl", storageUrl);
-        imageInfo.put("userId", userId);
-
-        imagesRef.document(documentId)
-                .set(imageInfo)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(CameraActivity.this, "Image uploaded to Firestore", Toast.LENGTH_SHORT).show();
+                        imagesRef.document(documentId)
+                                .set(imageInfo)
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(CameraActivity.this, "Image uploaded to Firestore", Toast.LENGTH_SHORT).show();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(CameraActivity.this, "Failed to upload image to Firestore", Toast.LENGTH_SHORT).show();
+                                });
+                    });
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(CameraActivity.this, "Failed to upload image to Firestore", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CameraActivity.this, "Failed to upload image", Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private void saveImageToMediaStore(File file) {
-        ContentResolver contentResolver = getContentResolver();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, file.getName());
-        contentValues.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-        contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + File.separator);
 
-        Uri imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-
-        try {
-            if (imageUri != null) {
-                try (OutputStream outputStream = contentResolver.openOutputStream(imageUri);
-                     FileInputStream inputStream = new FileInputStream(file)) {
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        assert outputStream != null;
-                        outputStream.write(buffer, 0, bytesRead);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     private void showPreview(String imagePath) {
         previewImageView.setVisibility(View.VISIBLE);

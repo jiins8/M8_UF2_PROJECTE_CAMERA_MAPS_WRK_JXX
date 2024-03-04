@@ -53,8 +53,6 @@ public class GalleryActivity extends AppCompatActivity {
             finish();
         } else {
 
-            updateToken();
-
             recyclerView = findViewById(R.id.recyclerView);
             recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
             imageAdapter = new ImageAdapter();
@@ -99,31 +97,4 @@ public class GalleryActivity extends AppCompatActivity {
                 });
     }
 
-    private void updateToken() {
-        FirebaseMessaging.getInstance().getToken()
-                .addOnSuccessListener(token -> {
-                    if (token != null) {
-                        Log.d(TAG, "Token: " + token);
-                        updateTokenInFirebase(token);
-                    } else {
-                        Log.w(TAG, "FCM token is null");
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to get FCM token", e);
-                });
-    }
-
-    private void updateTokenInFirebase(String token) {
-        String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-
-        Map<String, Object> tokenMap = new HashMap<>();
-        tokenMap.put("userToken", token);
-
-        FirebaseFirestore.getInstance().collection("users")
-                .document(userId)
-                .set(tokenMap, SetOptions.merge())
-                .addOnSuccessListener(unused -> Log.d(TAG, "FCM token updated in Firestore"))
-                .addOnFailureListener(e -> Log.e(TAG, "Error updating FCM token in Firestore", e));
-    }
 }

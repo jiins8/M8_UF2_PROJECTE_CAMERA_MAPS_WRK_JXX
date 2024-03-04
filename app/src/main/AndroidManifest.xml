@@ -26,6 +26,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.M8_UF2_PROJECTE_CAMERA_MAPS_WRK_JXX"
         tools:targetApi="31">
+
+        <activity
+        android:name=".MapsActivity"
+        android:exported="false" />
         <activity
             android:name=".GalleryActivity"
             android:exported="false" />

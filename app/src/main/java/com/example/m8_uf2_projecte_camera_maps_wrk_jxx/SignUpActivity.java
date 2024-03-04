@@ -73,7 +73,18 @@ public class SignUpActivity extends AppCompatActivity {
             if (TextUtils.isEmpty(password)) {
                 Toast.makeText(SignUpActivity.this, "The password cannot be empty", Toast.LENGTH_SHORT).show();
                 return;
-            }
+            }mAuth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(this, task -> {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(SignUpActivity.this, "Registration successful", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            Toast.makeText(SignUpActivity.this, "Registration failed. " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
         });
+
     }
 }

@@ -8,4 +8,7 @@
     <string name="click_to_register">Click here to Sign Up</string>
     <string name="log_out">Log Out</string>
     <string name="title_activity_maps">MapsActivity</string>
+    <string name="camera_x">Camera X</string>
+    <string name="maps">Maps</string>
+    <string name="gallery">Gallery</string>
 </resources>

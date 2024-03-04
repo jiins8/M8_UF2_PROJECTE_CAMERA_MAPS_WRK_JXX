@@ -1,5 +1,21 @@
 package com.example.m8_uf2_projecte_camera_maps_wrk_jxx;
 
+import android.Manifest;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.provider.MediaStore;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.Toast;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -22,24 +38,11 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
 
-import android.Manifest;
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.provider.MediaStore;
-import android.view.View;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.Toast;
-
-
 import com.example.m8_uf2_projecte_camera_maps_wrk_jxx.databinding.ActivityCameraBinding;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -47,18 +50,21 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 public class CameraActivity extends AppCompatActivity {
     private ActivityCameraBinding binding;
-    ImageButton cameraBtn, recordBtn, flipBtn, toggleFlash;
+    ImageButton cameraBtn, recordBtn, flipBtn, toggleFlash, backBtn;
     Recording recording = null;
     VideoCapture<Recorder> videoCapture = null;
     private PreviewView previewView;
     private ImageView previewImageView;
     int cameraOrientation = CameraSelector.LENS_FACING_BACK;
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
     private final ActivityResultLauncher<String> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), result -> {
         if (result) {
             startCamera(cameraOrientation);
@@ -103,7 +109,16 @@ public class CameraActivity extends AppCompatActivity {
             }
             startCamera(cameraOrientation);
         });
+
+        backBtn = binding.backBtn;
+
+        backBtn.setOnClickListener(v ->{
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            startActivity(intent);
+            finish();
+        });
     }
+
 
     private void startCamera(int cameraOrientation) {
         ListenableFuture<ProcessCameraProvider> listenableFuture = ProcessCameraProvider.getInstance(this);
@@ -188,12 +203,12 @@ public class CameraActivity extends AppCompatActivity {
     private void takePicture(ImageCapture imageCapture) {
         final File file = new File(getExternalFilesDir(null), System.currentTimeMillis() + ".jpg");
         ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(file).build();
+
         imageCapture.takePicture(outputFileOptions, Executors.newCachedThreadPool(), new ImageCapture.OnImageSavedCallback() {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                 runOnUiThread(() -> {
-                    saveImageToMediaStore(file);
-
+                    saveImageToFirestore(file);
                     startCamera(cameraOrientation);
                     showPreview(file.getPath());
                 });
@@ -205,6 +220,41 @@ public class CameraActivity extends AppCompatActivity {
                 startCamera(cameraOrientation);
             }
         });
+    }
+
+    private void saveImageToFirestore(File file) {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        // Replace "images" with the actual name of your Firestore collection
+        CollectionReference imagesRef = db.collection("images");
+
+        // Generate a unique document ID for each image
+        String documentId = imagesRef.document().getId();
+
+        Uri fileUri = Uri.fromFile(file);
+
+        // Create a unique file name in Cloud Storage
+        String cloudStorageFileName = "images/" + userId + "/" + documentId + ".jpg";
+
+        // Get the Cloud Storage URL
+        String storageUrl = "https://firebasestorage.googleapis.com/v0/b/" +
+                "<projecte-camera-mapsfb>.appspot.com/o/" +
+                cloudStorageFileName.replace("/", "%2F") +
+                "?alt=media";
+
+        // Add any additional fields you want to store in Firestore
+        Map<String, Object> imageInfo = new HashMap<>();
+        imageInfo.put("imageUrl", storageUrl);
+        imageInfo.put("userId", userId);
+
+        imagesRef.document(documentId)
+                .set(imageInfo)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(CameraActivity.this, "Image uploaded to Firestore", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(CameraActivity.this, "Failed to upload image to Firestore", Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void saveImageToMediaStore(File file) {

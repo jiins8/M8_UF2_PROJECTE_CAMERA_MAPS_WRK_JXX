@@ -11,6 +11,17 @@
         android:layout_height="match_parent"/>
 
     <ImageButton
+        android:id="@+id/backBtn"
+        android:layout_width="40sp"
+        android:layout_height="40sp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:backgroundTint="@color/white"
+        android:src="@drawable/baseline_keyboard_backspace_24"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
         android:id="@+id/cameraBtn"
         android:layout_width="60sp"
         android:layout_height="60sp"

@@ -14,7 +14,7 @@ import com.example.m8_uf2_projecte_camera_maps_wrk_jxx.databinding.ActivitySignU
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class SignUp extends AppCompatActivity {
+public class SignUpActivity extends AppCompatActivity {
 
     private ActivitySignUpBinding binding;
     private EditText editTextEmail, editTextPassword;
@@ -50,7 +50,7 @@ public class SignUp extends AppCompatActivity {
         click_to_login = binding.loginNow;
 
         click_to_login.setOnClickListener(v -> {
-            Intent intent = new Intent(getApplicationContext(), Login.class);
+            Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
             startActivity(intent);
             finish();
         });
@@ -61,17 +61,17 @@ public class SignUp extends AppCompatActivity {
             password = String.valueOf(editTextPassword.getText());
 
             if (TextUtils.isEmpty(email) && TextUtils.isEmpty(password)) {
-                Toast.makeText(SignUp.this, "The email and password cannot be empty", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SignUpActivity.this, "The email and password cannot be empty", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (TextUtils.isEmpty(email)) {
-                Toast.makeText(SignUp.this, "The email cannot be empty", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SignUpActivity.this, "The email cannot be empty", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (TextUtils.isEmpty(password)) {
-                Toast.makeText(SignUp.this, "The password cannot be empty", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SignUpActivity.this, "The password cannot be empty", Toast.LENGTH_SHORT).show();
                 return;
             }
         });

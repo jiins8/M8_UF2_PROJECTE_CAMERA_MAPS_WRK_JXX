@@ -7,4 +7,5 @@
     <string name="click_to_login">Click here to Login</string>
     <string name="click_to_register">Click here to Sign Up</string>
     <string name="log_out">Log Out</string>
+    <string name="title_activity_maps">MapsActivity</string>
 </resources>

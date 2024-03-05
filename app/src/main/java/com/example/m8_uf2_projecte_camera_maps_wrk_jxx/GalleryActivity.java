@@ -73,9 +73,8 @@ public class GalleryActivity extends AppCompatActivity {
     private void loadImagesFromFirestore() {
         String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
 
-        // Replace "images" with the actual collection name where you store your images
         db.collection("images")
-                .whereEqualTo("userId", userId) // You might need to adjust this based on your data model
+                .whereEqualTo("userId", userId)
                 .addSnapshotListener((value, error) -> {
                     if (error != null) {
 
@@ -86,12 +85,10 @@ public class GalleryActivity extends AppCompatActivity {
                         List<String> imageUrls = new ArrayList<>();
 
                         for (DocumentChange dc : value.getDocumentChanges()) {
-                            // Assuming you have a field named "imageUrl" in your Firestore document
                             String imageUrl = dc.getDocument().getString("imageUrl");
                             imageUrls.add(imageUrl);
                         }
 
-                        // Update the adapter with the new data
                         imageAdapter.setImageUrls(imageUrls);
                     }
                 });

@@ -26,24 +26,13 @@
         android:layout_width="60sp"
         android:layout_height="60sp"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="120dp"
+        android:layout_centerHorizontal="true"
         android:layout_marginBottom="40sp"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:scaleType="centerCrop"
         android:src="@drawable/baseline_photo_camera_24"
-        android:background="?attr/selectableItemBackgroundBorderless"
         app:tint="#fff" />
 
-    <ImageButton
-        android:id="@+id/recordBtn"
-        android:layout_width="60sp"
-        android:layout_height="60sp"
-        android:layout_alignEnd="@+id/cameraBtn"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="120sp"
-        android:layout_marginBottom="40sp"
-        android:src="@drawable/record_circle"/>
     <ImageButton
         android:id="@+id/toggleFlash"
         android:layout_width="40sp"

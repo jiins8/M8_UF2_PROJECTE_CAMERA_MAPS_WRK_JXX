@@ -15,6 +15,9 @@
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -27,9 +30,24 @@
         android:theme="@style/Theme.M8_UF2_PROJECTE_CAMERA_MAPS_WRK_JXX"
         tools:targetApi="31">
 
+        <!--
+             TODO: Before you run your application, you need a Google Maps API key.
+
+             To get one, follow the directions here:
+
+                https://developers.google.com/maps/documentation/android-sdk/get-api-key
+
+             Once you have your API key (it starts with "AIza"), define a new property in your
+             project's local.properties file (e.g. MAPS_API_KEY=Aiza...), and replace the
+             "YOUR_API_KEY" string in this file with "${MAPS_API_KEY}".
+        -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDDDllgpR19CP1aJ2Fa6zrdfbweNRP_ya4" />
+
         <activity
-        android:name=".MapsActivity"
-        android:exported="false" />
+            android:name=".MapsActivity"
+            android:exported="false" />
         <activity
             android:name=".GalleryActivity"
             android:exported="false" />

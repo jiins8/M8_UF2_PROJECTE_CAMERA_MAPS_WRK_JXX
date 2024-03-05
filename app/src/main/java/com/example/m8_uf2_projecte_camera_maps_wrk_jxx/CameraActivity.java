@@ -1,14 +1,11 @@
 package com.example.m8_uf2_projecte_camera_maps_wrk_jxx;
 
 import android.Manifest;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -24,19 +21,14 @@ import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.video.MediaStoreOutputOptions;
-import androidx.camera.video.Quality;
-import androidx.camera.video.QualitySelector;
-import androidx.camera.video.Recorder;
-import androidx.camera.video.Recording;
-import androidx.camera.video.VideoCapture;
-import androidx.camera.video.VideoRecordEvent;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.util.Consumer;
+
 
 import com.example.m8_uf2_projecte_camera_maps_wrk_jxx.databinding.ActivityCameraBinding;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
@@ -46,22 +38,23 @@ import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 public class CameraActivity extends AppCompatActivity {
     private ActivityCameraBinding binding;
-    ImageButton cameraBtn, recordBtn, flipBtn, toggleFlash, backBtn;
-    Recording recording = null;
-    VideoCapture<Recorder> videoCapture = null;
+    ImageButton cameraBtn, flipBtn, toggleFlash, backBtn;
     private PreviewView previewView;
     private ImageView previewImageView;
     int cameraOrientation = CameraSelector.LENS_FACING_BACK;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private final int LOCATION_PERMISSION_REQUEST_CODE = 100;
+    private FusedLocationProviderClient fusedLocationClient;
+
+
     private final ActivityResultLauncher<String> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), result -> {
         if (result) {
             startCamera(cameraOrientation);
@@ -74,23 +67,14 @@ public class CameraActivity extends AppCompatActivity {
         binding = ActivityCameraBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        requestLocationPermission();
+
         previewView = binding.cameraPreview;
         previewImageView = binding.previewImageView;
         cameraBtn = binding.cameraBtn;
         flipBtn = binding.flipCamera;
         toggleFlash = binding.toggleFlash;
-        recordBtn = binding.recordBtn;
-
-        recordBtn.setOnClickListener(v -> {
-            if (ActivityCompat.checkSelfPermission(CameraActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                activityResultLauncher.launch(Manifest.permission.CAMERA);
-            } else if (ActivityCompat.checkSelfPermission(CameraActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                activityResultLauncher.launch(Manifest.permission.RECORD_AUDIO);
-            } else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P && ActivityCompat.checkSelfPermission(CameraActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                activityResultLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-            }
-            captureVideo();
-        });
 
         if (ContextCompat.checkSelfPermission(CameraActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             activityResultLauncher.launch(Manifest.permission.CAMERA);
@@ -109,7 +93,7 @@ public class CameraActivity extends AppCompatActivity {
 
         backBtn = binding.backBtn;
 
-        backBtn.setOnClickListener(v ->{
+        backBtn.setOnClickListener(v -> {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intent);
             finish();
@@ -125,9 +109,6 @@ public class CameraActivity extends AppCompatActivity {
                 ProcessCameraProvider cameraProvider = listenableFuture.get();
                 Preview preview = new Preview.Builder().build();
 
-                Recorder recorder = new Recorder.Builder().setQualitySelector(QualitySelector.from(Quality.HIGHEST)).build();
-
-                videoCapture = VideoCapture.withOutput(recorder);
 
                 ImageCapture imageCapture = new ImageCapture.Builder()
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
@@ -140,7 +121,7 @@ public class CameraActivity extends AppCompatActivity {
 
                 cameraProvider.unbindAll();
 
-                Camera camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture, videoCapture);
+                Camera camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture);
 
                 cameraBtn.setOnClickListener(v -> takePicture(imageCapture));
                 toggleFlash.setOnClickListener(v -> setFlashIcon(camera));
@@ -154,48 +135,6 @@ public class CameraActivity extends AppCompatActivity {
     }
 
 
-    private void captureVideo() {
-        recordBtn.setImageResource(R.drawable.record_circle_outline);
-        Recording recording1 = recording;
-        if (recording1 != null) {
-            stopRecording();
-            return;
-        }
-        String name = new SimpleDateFormat("dd-MM-yyyy-hh", Locale.getDefault()).format(System.currentTimeMillis());
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
-        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4");
-        contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Movies/Videos");
-
-        MediaStoreOutputOptions options = new MediaStoreOutputOptions.Builder(getContentResolver(), MediaStore.Video.Media.EXTERNAL_CONTENT_URI).setContentValues(contentValues).build();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        recording = videoCapture.getOutput().prepareRecording(CameraActivity.this, options).withAudioEnabled().start(ContextCompat.getMainExecutor(CameraActivity.this), new Consumer<VideoRecordEvent>() {
-            @Override
-            public void accept(VideoRecordEvent videoRecordEvent) {
-                if (videoRecordEvent instanceof VideoRecordEvent.Start) {
-                    recordBtn.setImageResource(R.drawable.record_circle_outline);
-                } else if (videoRecordEvent instanceof VideoRecordEvent.Finalize) {
-                    if (((VideoRecordEvent.Finalize) videoRecordEvent).hasError()) {
-                        Toast.makeText(CameraActivity.this, "Error: " + ((VideoRecordEvent.Finalize) videoRecordEvent).getError(), Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(CameraActivity.this, "Video captured", Toast.LENGTH_SHORT).show();
-                    }
-                    recordBtn.setImageResource(R.drawable.record_circle);
-                }
-            }
-        });
-    }
-
-    private void stopRecording() {
-        if (recording != null) {
-            recording.stop();
-            recording.close();
-            recording = null;
-        }
-    }
 
     private void takePicture(ImageCapture imageCapture) {
         final File file = new File(getExternalFilesDir(null), System.currentTimeMillis() + ".jpg");
@@ -220,7 +159,7 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     private void saveImageToFirestore(File file) {
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
 
         CollectionReference imagesRef = db.collection("images");
 
@@ -236,22 +175,23 @@ public class CameraActivity extends AppCompatActivity {
                         imageInfo.put("imageUrl", uri.toString());
                         imageInfo.put("userId", userId);
 
-                        imagesRef.document(documentId)
-                                .set(imageInfo)
-                                .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(CameraActivity.this, "Image uploaded to Firestore", Toast.LENGTH_SHORT).show();
-                                })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(CameraActivity.this, "Failed to upload image to Firestore", Toast.LENGTH_SHORT).show();
-                                });
+                        fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
+                            if (location != null) {
+                                imageInfo.put("latitude", location.getLatitude());
+                                imageInfo.put("longitude", location.getLongitude());
+                            }
+
+                            imagesRef.document(documentId)
+                                    .set(imageInfo)
+                                    .addOnSuccessListener(aVoid -> Toast.makeText(CameraActivity.this, "Image uploaded to Firestore", Toast.LENGTH_SHORT).show())
+                                    .addOnFailureListener(e -> Toast.makeText(CameraActivity.this, "Failed to upload image to Firestore", Toast.LENGTH_SHORT).show());
+                        });
                     });
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(CameraActivity.this, "Failed to upload image", Toast.LENGTH_SHORT).show();
                 });
     }
-
-
 
     private void showPreview(String imagePath) {
         previewImageView.setVisibility(View.VISIBLE);
@@ -278,6 +218,26 @@ public class CameraActivity extends AppCompatActivity {
             }
         } else {
             Toast.makeText(CameraActivity.this, "Flash is not available", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void requestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            startCamera(cameraOrientation);
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startCamera(cameraOrientation);
+            } else {
+                Toast.makeText(this, "Location permission denied. Unable to proceed.", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

@@ -20,6 +20,7 @@ import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
+import androidx.camera.core.UseCase;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
@@ -53,6 +54,10 @@ public class CameraActivity extends AppCompatActivity {
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     private final int LOCATION_PERMISSION_REQUEST_CODE = 100;
     private FusedLocationProviderClient fusedLocationClient;
+    private ProcessCameraProvider cameraProvider;
+    private Camera camera;
+
+
 
 
     private final ActivityResultLauncher<String> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), result -> {
@@ -105,7 +110,7 @@ public class CameraActivity extends AppCompatActivity {
 
         listenableFuture.addListener(() -> {
             try {
-                ProcessCameraProvider cameraProvider = listenableFuture.get();
+                cameraProvider = listenableFuture.get();
                 Preview preview = new Preview.Builder().build();
 
 
@@ -118,9 +123,9 @@ public class CameraActivity extends AppCompatActivity {
                         .requireLensFacing(cameraOrientation)
                         .build();
 
-                cameraProvider.unbindAll();
+                unbindCamera();
 
-                Camera camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture);
+                camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture);
 
                 cameraBtn.setOnClickListener(v -> takePicture(imageCapture));
                 toggleFlash.setOnClickListener(v -> setFlashIcon(camera));
@@ -200,10 +205,7 @@ public class CameraActivity extends AppCompatActivity {
                 .into(previewImageView);
 
 
-        new Handler().postDelayed(() -> {
-            previewImageView.setVisibility(View.GONE);
-            startCamera(cameraOrientation);
-        }, 10000);
+        new Handler().postDelayed(() -> previewImageView.setVisibility(View.GONE), 8000);
     }
 
     private void setFlashIcon(Camera camera) {
@@ -247,12 +249,21 @@ public class CameraActivity extends AppCompatActivity {
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
                 if (cameraProvider != null) {
-                    cameraProvider.unbindAll();
+                    unbindCamera();
                 }
             } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
             }
         }, ContextCompat.getMainExecutor(this));
+    }
+
+    private void unbindCamera() {
+        if (cameraProvider != null) {
+            if (camera != null) {
+                cameraProvider.unbindAll();
+                camera = null;
+            }
+        }
     }
 
     @Override

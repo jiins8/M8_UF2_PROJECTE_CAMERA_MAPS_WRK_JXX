@@ -5,14 +5,16 @@ public class Image {
     private String imageUrl;
     private double latitude;
     private double longitude;
+    private String userId;
 
     public Image() {
     }
 
-    public Image(String imageUrl, double latitude, double longitude) {
+    public Image(String imageUrl, double latitude, double longitude, String userId) {
         this.imageUrl = imageUrl;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.userId = userId;
     }
 
     // Getters and setters
@@ -38,5 +40,13 @@ public class Image {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }

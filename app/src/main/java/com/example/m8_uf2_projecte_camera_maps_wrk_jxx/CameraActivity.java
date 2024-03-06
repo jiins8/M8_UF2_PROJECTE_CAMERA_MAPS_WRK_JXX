@@ -100,7 +100,6 @@ public class CameraActivity extends AppCompatActivity {
         });
     }
 
-
     private void startCamera(int cameraOrientation) {
         ListenableFuture<ProcessCameraProvider> listenableFuture = ProcessCameraProvider.getInstance(this);
 
@@ -247,7 +246,9 @@ public class CameraActivity extends AppCompatActivity {
         cameraProviderFuture.addListener(() -> {
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-                cameraProvider.unbindAll();
+                if (cameraProvider != null) {
+                    cameraProvider.unbindAll();
+                }
             } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
             }
@@ -256,7 +257,13 @@ public class CameraActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         releaseCamera();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onStop() {
+        releaseCamera();
+        super.onStop();
     }
 }

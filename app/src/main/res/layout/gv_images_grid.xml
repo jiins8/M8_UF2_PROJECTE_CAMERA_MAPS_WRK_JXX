@@ -23,6 +23,7 @@
         android:layout_width="380sp"
         android:layout_height="650sp"
         android:numColumns="auto_fit"
+        android:paddingLeft="30dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

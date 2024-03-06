@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -82,13 +83,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Glide.with(this)
                 .asBitmap()
                 .load(imageUrl)
-                .apply(new RequestOptions().override(100, 100))  // Set the desired width and height
+                .apply(new RequestOptions().override(100, 100))
                 .into(new CustomTarget<Bitmap>() {
                     @Override
                     public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
                         BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(resource);
 
-                        // Add custom marker to the map
                         mMap.addMarker(new MarkerOptions()
                                 .position(location)
                                 .title("Image Marker")
@@ -97,10 +97,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     @Override
                     public void onLoadCleared(@Nullable Drawable placeholder) {
-                        // Implement if needed
                     }
                 });
     }
-
-
 }

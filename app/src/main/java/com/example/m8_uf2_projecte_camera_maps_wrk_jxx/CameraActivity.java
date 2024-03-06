@@ -57,9 +57,6 @@ public class CameraActivity extends AppCompatActivity {
     private ProcessCameraProvider cameraProvider;
     private Camera camera;
 
-
-
-
     private final ActivityResultLauncher<String> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), result -> {
         if (result) {
             startCamera(cameraOrientation);

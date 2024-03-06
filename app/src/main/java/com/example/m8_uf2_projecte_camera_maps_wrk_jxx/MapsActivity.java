@@ -1,5 +1,6 @@
 package com.example.m8_uf2_projecte_camera_maps_wrk_jxx;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -36,6 +37,8 @@ import java.util.List;
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private ImageButton backBtn;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +47,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        backBtn = findViewById(R.id.backBtn);
+
+        backBtn.setOnClickListener(v -> {
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            startActivity(intent);
+            finish();
+        });
 
         retrieveAndAddMarkers();
     }
